@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partilhar Localização</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    text-align:center;
+    margin-top:50px;
+    padding:20px;
+}
+
+select{
+    padding:10px;
+    font-size:16px;
+    width:250px;
+    margin-bottom:20px;
+}
+
+button{
+    background:#005CA9;
+    color:white;
+    border:none;
+    padding:15px 30px;
+    font-size:18px;
+    border-radius:10px;
+    cursor:pointer;
+    margin:5px;
+}
+
+button:hover{
+    background:#004080;
+}
+
+#resultado{
+    margin-top:20px;
+    font-size:16px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Partilhar Localização</h2>
+
+<p>Selecione o Parceiro:</p>
+
+<select id="parceiro" required>
+
+    <option value="">-- Selecione um parceiro --</option>
+    <option value="Parceiro A">Parceiro A</option>
+    <option value="Parceiro B">Parceiro B</option>
+    <option value="Parceiro C">Parceiro C</option>
+
+</select>
+
+<br>
+
+<button onclick="obterLocalizacao()">
+    Enviar Localização
+</button>
+
+<button onclick="iniciarMonitorizacao()">
+    Iniciar Monitorização
+</button>
+
+<button onclick="pararMonitorizacao()">
+    Parar Monitorização
+</button>
+
+<div id="resultado"></div>
+
+<script>
+
+const FLOW_URL = "COLOCA_AQUI_O_TEU_URL_DO_POWER_AUTOMATE";
+
+let monitorizacaoAtiva = false;
+let intervaloMonitorizacao = null;
+let timeoutMonitorizacao = null;
+let sequencia = 0;
+
+function iniciarMonitorizacao(){
+
+    const parceiro = document.getElementById("parceiro").value;
+
+    if(parceiro === ""){
+
+        document.getElementById("resultado").innerHTML =
+        "<p style='color:red'><b>Selecione um parceiro antes de continuar.</b></p>";
+
+        return;
+    }
+
+    if(monitorizacaoAtiva){
+
+        alert("A monitorização já está ativa.");
+        return;
+
+    }
+
+    monitorizacaoAtiva = true;
+    sequencia = 0;
+
+    document.getElementById("resultado").innerHTML =
+    "<h3>✅ Monitorização iniciada</h3><p>Envio automático de 15 em 15 minutos.</p>";
+
+    obterLocalizacao();
+
+    intervaloMonitorizacao = setInterval(function(){
+
+        obterLocalizacao();
+
+    }, 15 * 60 * 1000);
+
+    timeoutMonitorizacao = setTimeout(function(){
+
+        pararMonitorizacao();
+
+        alert("Monitorização terminada após 8 horas.");
+
+    }, 8 * 60 * 60 * 1000);
+
+}
+
+function pararMonitorizacao(){
+
+    if(intervaloMonitorizacao){
+
+        clearInterval(intervaloMonitorizacao);
+        intervaloMonitorizacao = null;
+
+    }
+
+    if(timeoutMonitorizacao){
+
+        clearTimeout(timeoutMonitorizacao);
+        timeoutMonitorizacao = null;
+
+    }
+
+    monitorizacaoAtiva = false;
+
+    document.getElementById("resultado").innerHTML =
+    "<h3>⏹️ Monitorização parada</h3>";
+
+}
+
+function obterLocalizacao(){
+
+    const parceiro = document.getElementById("parceiro").value;
+
+    if(parceiro === ""){
+
+        document.getElementById("resultado").innerHTML =
+        "<p style='color:red'><b>Selecione um parceiro antes de continuar.</b></p>";
+
+        return;
+    }
+
+    if(navigator.geolocation){
+
+        navigator.geolocation.getCurrentPosition(
+
+            sucesso,
+
+            erro,
+
+            {
+                enableHighAccuracy:true,
+                timeout:10000,
+                maximumAge:0
+            }
+
+        );
+
+    }
+    else{
+
+        document.getElementById("resultado").innerHTML =
+        "Geolocalização não suportada neste dispositivo.";
+
+    }
+
+}
+
+function sucesso(posicao){
+
+    const latitude = posicao.coords.latitude;
+    const longitude = posicao.coords.longitude;
+    const parceiro = document.getElementById("parceiro").value;
+
+    sequencia++;
+
+    fetch(FLOW_URL,{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+
+            parceiro:parceiro,
+            latitude:latitude,
+            longitude:longitude,
+            data:new Date().toISOString(),
+            sequencia:sequencia
+
+        })
+
+    })
+
+    .then(response=>{
+
+        if(!response.ok){
+
+            throw new Error("Erro no envio");
+
+        }
+
+        return response.text();
+
+    })
+
+    .then(data=>{
+
+        document.getElementById("resultado").innerHTML =
+        "<h3>✅ Localização enviada com sucesso</h3>" +
+        "<p><b>Parceiro:</b> " + parceiro + "</p>" +
+        "<p><b>Envio nº:</b> " + sequencia + "</p>" +
+        "<p><b>Data:</b> " + new Date().toLocaleString() + "</p>" +
+        "<p><a target='_blank' href='https://www.google.com/maps?q=" +
+        latitude + "," + longitude +
+        "'>Ver localização no Google Maps</a></p>";
+
+    })
+
+    .catch(error=>{
+
+        document.getElementById("resultado").innerHTML =
+        "<h3>❌ Erro ao enviar localização</h3>" +
+        "<p>" + error.message + "</p>";
+
+    });
+
+}
+
+function erro(err){
+
+    document.getElementById("resultado").innerHTML =
+    "Erro GPS: " + err.code + " - " + err.message;
+
+}
+
+</script>
+
+</body>
+</html>
