@@ -78,7 +78,7 @@ button:hover{
 
 <script>
 
-const FLOW_URL = "COLOCA_AQUI_O_TEU_URL_DO_POWER_AUTOMATE";
+const FLOW_URL = "https://default119ca644d1ee49a6b0b443515deb67.54.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/79ebc374865d44b29a2aa5a0cc3bb07c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=A5lC2Tt6stdRMn0TOY2EfZLMBtLHEQuN3sY9bi10vPA";
 
 let monitorizacaoAtiva = false;
 let intervaloMonitorizacao = null;
