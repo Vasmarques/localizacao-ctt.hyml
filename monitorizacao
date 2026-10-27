@@ -7,6 +7,12 @@
 
 <style>
 
+.logo{
+    width:250px;
+    max-width:90%;
+    margin-bottom:20px;
+}
+
 body{
     font-family: Arial, sans-serif;
     text-align:center;
