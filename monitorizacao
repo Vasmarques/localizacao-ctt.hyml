@@ -46,7 +46,7 @@ button:hover{
 </head>
 
 <body>
-
+<img src="logo_ctt.png" alt="CTT" width="250">
 <h2>Partilhar Localização</h2>
 
 <p>Selecione o Parceiro:</p>
